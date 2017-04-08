@@ -26,6 +26,7 @@ const userSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+
 /**
  * Password hash middleware.
  */
@@ -66,5 +67,4 @@ userSchema.methods.gravatar = function gravatar(size) {
 };
 
 const User = mongoose.model('User', userSchema);
-
 module.exports = User;

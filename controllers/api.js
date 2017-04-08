@@ -22,6 +22,7 @@ const foursquare = require('node-foursquare')({
     redirectUrl: process.env.FOURSQUARE_REDIRECT_URL
   }
 });
+const Conversation = require('../models/Conversation');
 
 /**
  * GET /api
@@ -373,6 +374,31 @@ exports.postStripe = (req, res) => {
   });
 };
 
+exports.getRandom = (req, res) => {
+  // var url_test = "https://api.twilio.com/2010-04-01/Accounts/AC9cf7aec71223f7cecc9e2eb1c1d7632a/Recordings/REcc601ca04f100ba3a044e0a59ece68cf/AddOnResults/XR534b2cee8dfe526814a0fdbc4164d2db/Payloads/XH363ec1a223e198bef007c01321be24db/Data";
+  var url_test2 = "https://";
+  // url_test2 += process.env.TWILIO_SID + ":" + process.env.TWILIO_TOKEN;
+  url_test2 += "api.twilio.com/2010-04-01/Accounts/AC9cf7aec71223f7cecc9e2eb1c1d7632a/Recordings/REcc601ca04f100ba3a044e0a59ece68cf/AddOnResults/XR534b2cee8dfe526814a0fdbc4164d2db/Payloads/XH363ec1a223e198bef007c01321be24db/Data";
+  url_test2 += "?user=" + process.env.TWILIO_SID + ":password=" + process.env.TWILIO_TOKEN;
+  request.get({ url: url_test2, 
+                  // qs : {
+                  //   "user" : process.env.TWILIO_SID,
+                  //   "password" : process.env.TWILIO_TOKEN
+                  //   },
+        json: true }, (err, request, response) => {
+        if (request.statusCode === 401) {
+          console.log('status code is 401, invalid access');
+          return done(new Error('Invalid ACCESS'));
+        } else {
+          console.log(response); // 'image/png'
+          var transcription_text_caller = response.results[1].alternatives[0].transcript;
+          console.log('transcription text caller: ' + transcription_text_caller);
+          // req.flash('success', { msg: `transcription complete` });
+        }
+        done(err, response);
+      });
+};
+
 /**
  * GET /api/twilio
  * Twilio API example.
@@ -384,27 +410,40 @@ exports.getTwilio = (req, res) => {
 };
 
 exports.recordWatsonTranscription = (req, res, next) => {
-  console.log('received watson transcription:');
-  console.log(req.body);
-  req.flash('success', { msg: `transcription complete` });
+  console.log('received watson transcriptionn:');
+  console.log(req.body["AddOns"]);
+  console.log('gonna parse json');
+  var addOns = req.body;
+  var addOns = JSON.parse(req.body["AddOns"]);
+  console.log('got past parse');
+  console.log(addOns.status);
+  if (addOns.status === 'successful') {
+    console.log('got past status check');
+    var transcription_url = addOns.results.ibm_watson_speechtotext.payload[0].url;
+    var recording_url = addOns.results.ibm_watson_speechtotext.links.recording;
+    console.log('transcript_url: ' + transcription_url);
+    console.log('recording_url: ' + recording_url);
+    request.get({ url: transcription_url, 
+                  qs : {
+                    "username" : process.env.TWILIO_SID,
+                    "password" : process.env.TWILIO_TOKEN
+                    },
+        json: true }, (err, request, body) => {
+        if (request.statusCode === 401) {
+          console.log('status code is 401, invalid access');
+          return done(new Error('Invalid ACCESS'));
+        } else {
+          console.log(response) // 'image/png'
+          var transcription_text_caller = response.results[1].alternatives[0].transcript;
+          console.log('transcription text caller: ' + transcription_text_caller);
+          req.flash('success', { msg: `transcription complete` });
+        }
+        done(err, body);
+      });
+    // var transcription_text_caller = obj.results[0].alternatives[0].transcript;
+    // var transcription_text_reciever = obj.results[1].alternatives[0].transcript;
+  }
   res.end();
-};
-
-exports.record_twilio_message = (req, res, next) => {
-  // Return TwiML instuctions for the outbound call
-  console.log('got here inside record_twilio_message!');
-  // var salesNumber = request.params.salesNumber;
-  // var twimlResponse = new twilio.TwimlResponse();
-
-  // twimlResponse.say('Thanks for contacting our sales department. Our ' +
-  //                   'next available representative will take your call. ',
-  //                   { voice: 'alice' });
-  // twimlResponse.record();
-  // // twimlResponse.dial(salesNumber);
-  // console.log(twimlResponse.toString());
-  // response.send(twimlResponse.toString());
-  // console.log('<?xml version="1.0" encoding="UTF-8"?><Response><Record timeout="10"/></Response>');
-  return next('<?xml version="1.0" encoding="UTF-8"?><!-- page located at http://example.com/simple_record.xml --><Response><Record/></Response>');
 };
 
 /**
@@ -430,11 +469,10 @@ exports.postTwilio = (req, res, next) => {
         method: 'GET',
         // sid: 'AP0d598c4f16b19bf48c1c3e0b1c046344',
         to: req.body.number,
-        from: process.env.TWILIO_PHONE_NUMBER,
+        from: process.env.TWILIO_PHONE_NUMBER
         // url: "http://demo.twilio.com/docs/voice.xml",
         // to: "+14155551212",
         // from: "+15017250604",
-        record: true 
     }, function(err, call) {
         if(err) {
           console.log('you got an error making a call');

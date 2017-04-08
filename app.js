@@ -134,9 +134,6 @@ app.post('/account/password', passportConfig.isAuthenticated, userController.pos
 app.post('/account/delete', passportConfig.isAuthenticated, userController.postDeleteAccount);
 app.get('/account/unlink/:provider', passportConfig.isAuthenticated, userController.getOauthUnlink);
 
-app.post('/speech_to_text_callback', apiController.recordWatsonTranscription);
-app.post('/outbound', apiController.record_twilio_message);
-
 
 /**
  * API examples routes.
@@ -171,6 +168,7 @@ app.get('/api/pinterest', passportConfig.isAuthenticated, passportConfig.isAutho
 app.post('/api/pinterest', passportConfig.isAuthenticated, passportConfig.isAuthorized, apiController.postPinterest);
 app.get('/api/google-maps', apiController.getGoogleMaps);
 app.post('/speech_to_text_callback', apiController.recordWatsonTranscription);
+app.get('/getrandom', apiController.getRandom);
 
 /**
  * OAuth authentication routes. (Sign in)
