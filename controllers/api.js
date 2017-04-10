@@ -374,29 +374,10 @@ exports.postStripe = (req, res) => {
   });
 };
 
-exports.getRandom = (req, res) => {
-  // var url_test = "https://api.twilio.com/2010-04-01/Accounts/AC9cf7aec71223f7cecc9e2eb1c1d7632a/Recordings/REcc601ca04f100ba3a044e0a59ece68cf/AddOnResults/XR534b2cee8dfe526814a0fdbc4164d2db/Payloads/XH363ec1a223e198bef007c01321be24db/Data";
-  var url_test2 = "https://";
-  // url_test2 += process.env.TWILIO_SID + ":" + process.env.TWILIO_TOKEN;
-  url_test2 += "api.twilio.com/2010-04-01/Accounts/AC9cf7aec71223f7cecc9e2eb1c1d7632a/Recordings/REcc601ca04f100ba3a044e0a59ece68cf/AddOnResults/XR534b2cee8dfe526814a0fdbc4164d2db/Payloads/XH363ec1a223e198bef007c01321be24db/Data";
-  url_test2 += "?user=" + process.env.TWILIO_SID + ":password=" + process.env.TWILIO_TOKEN;
-  request.get({ url: url_test2, 
-                  // qs : {
-                  //   "user" : process.env.TWILIO_SID,
-                  //   "password" : process.env.TWILIO_TOKEN
-                  //   },
-        json: true }, (err, request, response) => {
-        if (request.statusCode === 401) {
-          console.log('status code is 401, invalid access');
-          return done(new Error('Invalid ACCESS'));
-        } else {
-          console.log(response); // 'image/png'
-          var transcription_text_caller = response.results[1].alternatives[0].transcript;
-          console.log('transcription text caller: ' + transcription_text_caller);
-          // req.flash('success', { msg: `transcription complete` });
-        }
-        done(err, response);
-      });
+exports.getRandom = (req, res, next) => {
+  
+  // var url_test2 = "https://api.twilio.com/2010-04-01/Accounts/AC9cf7aec71223f7cecc9e2eb1c1d7632a/Recordings/REcc601ca04f100ba3a044e0a59ece68cf/AddOnResults/XR534b2cee8dfe526814a0fdbc4164d2db/Payloads/XH363ec1a223e198bef007c01321be24db/Data";
+  
 };
 
 /**
@@ -423,27 +404,30 @@ exports.recordWatsonTranscription = (req, res, next) => {
     var recording_url = addOns.results.ibm_watson_speechtotext.links.recording;
     console.log('transcript_url: ' + transcription_url);
     console.log('recording_url: ' + recording_url);
-    request.get({ url: transcription_url, 
-                  qs : {
-                    "username" : process.env.TWILIO_SID,
-                    "password" : process.env.TWILIO_TOKEN
-                    },
-        json: true }, (err, request, body) => {
+
+    // Make a request to a python server that bounces that request to 
+    // Twilio's servers which have the transcript data.
+    // separate Python server is neccessary for auth reasons.
+    var python_url = 'http://127.0.0.1:5000/callback';
+    request.post({ url: python_url, 
+        form: { url : transcription_url },
+        json: true }, (err, request, response) => {
+          console.log('response'); 
+          console.log(response);
         if (request.statusCode === 401) {
           console.log('status code is 401, invalid access');
-          return done(new Error('Invalid ACCESS'));
+          res.status(401).end();
         } else {
-          console.log(response) // 'image/png'
-          var transcription_text_caller = response.results[1].alternatives[0].transcript;
-          console.log('transcription text caller: ' + transcription_text_caller);
-          req.flash('success', { msg: `transcription complete` });
+          console.log('transcript received!');
+          console.log(response); // 'image/png'
+          res.status(200).send();
         }
-        done(err, body);
       });
     // var transcription_text_caller = obj.results[0].alternatives[0].transcript;
     // var transcription_text_reciever = obj.results[1].alternatives[0].transcript;
+  } else {  
+    res.status(400).end();
   }
-  res.end();
 };
 
 /**
