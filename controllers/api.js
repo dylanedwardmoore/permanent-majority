@@ -23,6 +23,7 @@ const foursquare = require('node-foursquare')({
   }
 });
 const Conversation = require('../models/Conversation');
+var transcript_sms_reply_number = '15555555';
 
 /**
  * GET /api
@@ -392,7 +393,7 @@ exports.getTwilio = (req, res) => {
 
 exports.recordWatsonTranscription = (req, res, next) => {
   console.log('received watson transcriptionn:');
-  console.log(req.body["AddOns"]);
+  console.log(req.body);
   console.log('gonna parse json');
   var addOns = req.body;
   var addOns = JSON.parse(req.body["AddOns"]);
@@ -408,7 +409,7 @@ exports.recordWatsonTranscription = (req, res, next) => {
     // Make a request to a python server that bounces that request to 
     // Twilio's servers which have the transcript data.
     // separate Python server is neccessary for auth reasons.
-    var python_url = 'http://127.0.0.1:5000/callback';
+    var python_url = process.env.TWILIO_PYTHON_SERVER_URL; // CHANGE THIS AS NEEDED!
     request.post({ url: python_url, 
         form: { url : transcription_url },
         json: true }, (err, request, response) => {
@@ -420,7 +421,20 @@ exports.recordWatsonTranscription = (req, res, next) => {
         } else {
           console.log('transcript received!');
           console.log(response); // 'image/png'
-          res.status(200).send();
+          var message_to_send = 'Permanent Majority heard you say "' + response+'", we\'ll go ahead and save that data for our analysis.';
+          // now send the transcript as a message :) 
+          const message = {
+            to: transcript_sms_reply_number,//req.body.number,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            body: message_to_send
+          };
+          twilio.sendMessage(message, (err2, responseData) => {
+            if (err2) { res.status(400).end();
+            } else {
+              res.status(200).send();
+            }
+          });
+          
         }
       });
     // var transcription_text_caller = obj.results[0].alternatives[0].transcript;
@@ -448,6 +462,7 @@ exports.postTwilio = (req, res, next) => {
     // var url = 'http://' + req.headers.host + '/outbound';// '/outbound/' + encodeURIComponent(salesNumber)
     var url = 'http://' + req.headers.host + '/xml/basic.xml';
     console.log('got to url, it is: ' + url);
+    transcript_sms_reply_number = req.body.number;
     twilio.calls.create({
         url: url,
         method: 'GET',

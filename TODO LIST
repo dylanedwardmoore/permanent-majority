@@ -1,21 +1,21 @@
 TODO LIST (dylan):
 
-> Make twilio make outbound and inbound calls (api.js)
-	> http://stackoverflow.com/questions/547821/two-submit-buttons-in-one-form
-		> Once you determine which button was used to trigger the form, either make
-		  a call or send a SMS message
-	> use ngrok to create public url, link this to twilio
-	> Set up outbound calls with url
-	> Intercept callback url, log something in the console
-	> Make interface look good when calling
-> record outgoing and incoming phone calls and save them to mongodb 
-	> Get database object for conversation set up. 
-	> Outgoing is easy, replace console log from above with Collection.Create() call
-	> show message once call is complete saying: "conversation logged, click to view? (link)"
-		> May need to use angular bindings to do this well. perhaps not though... could just do a simple page reload. whatever works 
+> Add date checker for people to simulate what date they are calling from (auto defaults to normal)
+> Add a required text field that says: caller name (perhaps replace this with white pages if time)
 > Show items from database 
 	> for a first pass just get everything to show up. Then make it pretty after that.
-	> add a search bar etc. 
+	  items must have links to:
+		1) date (store day of the week seperately)
+		2) Number
+		3) Name  
+		4) call transcription (via a button to a new window)
+		5) call recording (via a button)
+	> show most frequent callers at the top
+	> somewhere have a graph with frequency of all calls by day of the week
+	> have another by month
+> Have a page that describes the purposes of the demo and a link to the google slides on how it works.
 > Host the application
 > Set up google analytics
 > make aesthetic changes if necessary. 
+
+time required (2 days.)
