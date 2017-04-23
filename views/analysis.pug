@@ -1,0 +1,16 @@
+extends layout
+
+block content
+  h1 Anaylsis
+  h2.
+    Call Frequency:
+  #chart_div
+  h2.
+    Logged Data:
+  #callTable
+  
+  script(src='/js/lib/jquery-1.10.2.min.js')
+  script(src="https://www.gstatic.com/charts/loader.js")
+  script(src='/js/analysis.js')
+  link(rel='stylesheet', href='/css/analysisStyle.css')
+

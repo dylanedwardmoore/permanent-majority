@@ -24,6 +24,7 @@ const foursquare = require('node-foursquare')({
 });
 const Conversation = require('../models/Conversation');
 var transcript_sms_reply_number = '15555555';
+var receiver_name_from_form = 'John Smith';
 
 /**
  * GET /api
@@ -431,18 +432,39 @@ exports.recordWatsonTranscription = (req, res, next) => {
           twilio.sendMessage(message, (err2, responseData) => {
             if (err2) { res.status(400).end();
             } else {
-              res.status(200).send();
+              saveConversationToDataBase(response, transcription_url, recording_url);
+              res.status(200).end();
             }
           });
           
         }
       });
-    // var transcription_text_caller = obj.results[0].alternatives[0].transcript;
-    // var transcription_text_reciever = obj.results[1].alternatives[0].transcript;
   } else {  
     res.status(400).end();
   }
 };
+
+
+var saveConversationToDataBase = function(transcript, recording_url, transcript_url) {
+  const conversation = new Conversation({
+    created: new Date(),
+    transcriptionUrl: transcript_url,
+    recordingUrl: recording_url,
+    transcription: transcript,
+    receiverName: receiver_name_from_form,
+    receiverNumber: transcript_sms_reply_number
+  });
+  conversation.save((err) => {
+    if (err) { 
+      console.log('error saving conversation to database');
+      res.status(505).end(); 
+    } else {
+      console.log(conversation);
+      console.log('successfully saved conversation to database');
+    }
+  });
+}
+
 
 /**
  * POST /api/twilio
@@ -450,6 +472,7 @@ exports.recordWatsonTranscription = (req, res, next) => {
  */
 exports.postTwilio = (req, res, next) => {
   req.assert('number', 'Phone number is required.').notEmpty();
+  req.assert('receiver_name', 'Name cannot be blank').notEmpty();
   console.log(req.body);
 
   const errors = req.validationErrors();
@@ -463,6 +486,7 @@ exports.postTwilio = (req, res, next) => {
     var url = 'http://' + req.headers.host + '/xml/basic.xml';
     console.log('got to url, it is: ' + url);
     transcript_sms_reply_number = req.body.number;
+    receiver_name_from_form = req.body.receiver_name;
     twilio.calls.create({
         url: url,
         method: 'GET',
@@ -478,7 +502,6 @@ exports.postTwilio = (req, res, next) => {
           console.log(err);
         }
         req.flash('success', { msg: `Calling ${req.body.number}` });
-        process.stdout.write(call.sid);
         res.redirect('/api/twilio');
     });
   } else if (req.body.action === 'message') {

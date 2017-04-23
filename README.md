@@ -1,1 +1,1 @@
-A demo app for permenant majority, by Dylan Moore and Alex Coffman.
+A demo app for permenant majority, by Dylan Moore and Alex Coffman, see license for info on some of the other resources that were used.

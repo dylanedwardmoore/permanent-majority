@@ -26,6 +26,9 @@ block content
           br
           input.form-control(type='text', id='number', name='number', 
             placeholder='(415) 966-6732', autofocus)
+        .form-group
+          label.control-label Name of Person Being Called
+          input.form-control(type='text', id='receiver_name', name='receiver_name')
         // if call_center.make_a_call
         button.btn.btn-default(type='submit', name='action', value='call')
           i.fa.fa-location-arrow
