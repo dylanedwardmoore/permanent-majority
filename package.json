@@ -1,6 +1,10 @@
 {
   "name": "hackathon-starter",
   "version": "4.3.0",
+  "main": "app.js",
+  "scripts": {
+    "start": "supervisor app.js"
+  },
   "description": "A boilerplate for Node.js web applications",
   "repository": {
     "type": "git",
