@@ -229,11 +229,12 @@ app.use(errorHandler());
  * Start Express server.
  */
 
-var IP_ADDRESS = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
-var PORT = process.env.OPENSHIFT_NODEJS_PORT || 8080;
-
-app.listen(PORT, IP_ADDRESS,() => {
-  console.log(`Express server listening on port ${PORT} in ${app.settings.env} mode`);
+/**
+ * Start Express server.
+ */
+app.listen(app.get('port'), () => {
+  console.log('%s App is running at http://localhost:%d in %s mode', chalk.green('✓'), app.get('port'), app.get('env')); 
+  console.log('  Press CTRL-C to stop\n');
 });
 
 module.exports = app;
