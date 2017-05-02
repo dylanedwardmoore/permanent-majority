@@ -14,6 +14,16 @@ exports.index = (req, res) => {
 
 /**
  * GET /
+ * Home page.
+ */
+exports.safelogin = (req, res) => {
+  res.render('safelogin', {
+    title: 'Secure Login'
+  });
+};
+
+/**
+ * GET /
  * Analysis
  */
 exports.getAnalysis = (req, res) => {
@@ -21,6 +31,18 @@ exports.getAnalysis = (req, res) => {
     title: 'Analysis'
   });
 };
+
+exports.postSafeLogin = (req, res, next) => {
+  if(req.body.passphrase === 'demo!') {
+    res.render('home', {
+      title: 'Home'
+    });
+  } else {
+    res.render('safelogin', {
+      title: 'Secure Login'
+    });
+  }
+}
 
 /**
  * GET /
