@@ -23,7 +23,11 @@ const foursquare = require('node-foursquare')({
   }
 });
 const Conversation = require('../models/Conversation');
+
+// Note! This is a hacky solution, keeping these variables as such. 
+// It won't scale to multiple instsances of users using this product, but it should work fine for the purposes of a demo.
 var transcript_sms_reply_number = '15555555';
+var twilio_num_to_use = process.env.TWILIO_PHONE_NUMBER_US;
 var receiver_name_from_form = 'John Smith';
 
 /**
@@ -426,17 +430,16 @@ exports.recordWatsonTranscription = (req, res, next) => {
           // now send the transcript as a message :) 
           const message = {
             to: transcript_sms_reply_number,//req.body.number,
-            from: process.env.TWILIO_PHONE_NUMBER,
+            from: twilio_num_to_use,
             body: message_to_send
           };
           twilio.sendMessage(message, (err2, responseData) => {
+            saveConversationToDataBase(response, transcription_url, recording_url);
             if (err2) { res.status(400).end();
             } else {
-              saveConversationToDataBase(response, transcription_url, recording_url);
               res.status(200).end();
             }
           });
-          
         }
       });
   } else {  
@@ -481,6 +484,13 @@ exports.postTwilio = (req, res, next) => {
     req.flash('errors', errors);
     return res.redirect('/api/twilio');
   }
+
+  // Check which phone number to use from twilio
+  if (req.body.use_phone_num === 1) {
+    twilio_num_to_use = process.env.TWILIO_PHONE_NUMBER_US;
+  } else if (req.body.use_phone_num === 2) {
+    twilio_num_to_use = process.env.TWILIO_PHONE_NUMBER_AUS;
+  }
   if(req.body.action === 'call') {
     // var url = 'http://' + req.headers.host + '/outbound';// '/outbound/' + encodeURIComponent(salesNumber)
     var url = 'http://' + req.headers.host + '/xml/basic.xml';
@@ -492,7 +502,7 @@ exports.postTwilio = (req, res, next) => {
         method: 'GET',
         // sid: 'AP0d598c4f16b19bf48c1c3e0b1c046344',
         to: req.body.number,
-        from: process.env.TWILIO_PHONE_NUMBER
+        from: twilio_num_to_use;
         // url: "http://demo.twilio.com/docs/voice.xml",
         // to: "+14155551212",
         // from: "+15017250604",
@@ -508,7 +518,7 @@ exports.postTwilio = (req, res, next) => {
     req.assert('message', 'Message cannot be blank.').notEmpty();
     const message = {
       to: req.body.number,
-      from: process.env.TWILIO_PHONE_NUMBER,
+      from: twilio_num_to_use,
       body: req.body.message
     };
     twilio.sendMessage(message, (err, responseData) => {
