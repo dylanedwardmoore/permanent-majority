@@ -1,1 +1,1 @@
-A demo app for permenant majority, by Dylan Moore and Alex Coffman, see license for info on some of the other resources that were used.
+A Twilio call center app, see license for info on some of the other resources that were used.
